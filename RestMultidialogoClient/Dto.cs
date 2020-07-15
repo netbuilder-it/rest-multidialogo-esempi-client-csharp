@@ -570,12 +570,14 @@ namespace RestMultidialogoClient.Dto
         public string countryCode;
         public string billingMode;
         public CuTrack track;
+        public string type;
 
         public CuPostRequest(string fileContent)
         {
             this.label = "Esempio";
             this.countryCode = "it";
-            this.billingMode = "SPLIT";
+            this.billingMode = "CLAIM";
+            this.type = "CU";
             this.track = new CuTrack(fileContent);
         }
     }
