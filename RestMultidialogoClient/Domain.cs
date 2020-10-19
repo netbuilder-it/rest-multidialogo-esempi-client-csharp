@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace RestMultidialogoClient.Domain
 {
@@ -274,7 +275,7 @@ namespace RestMultidialogoClient.Domain
         }
     }
 
-     public class Message
+    public class Message
     {
         public readonly string subject;
         public readonly string body;
@@ -419,4 +420,74 @@ namespace RestMultidialogoClient.Domain
         }
     }
 
+    public class SmsSender
+    {
+        public string aliasUuid;
+        public string phoneNumberUuid;
+        public string notificationAddress;
+
+
+        public SmsSender(string aliasUuid, string phoneNumberUuid, string notificationAddress)
+        {
+            this.aliasUuid = aliasUuid;
+            this.phoneNumberUuid = phoneNumberUuid;
+            this.notificationAddress = notificationAddress;
+        }
+
+        public static SmsSender createWithAlias(string aliasUuid, string notificationEmailAddress)
+        {
+            return new SmsSender(aliasUuid, null, notificationEmailAddress);
+        }
+
+        public static SmsSender createWithPhoneNumber(string phoneNumberUuid, string notificationEmailAddress)
+        {
+            return new SmsSender(null, phoneNumberUuid, notificationEmailAddress);
+        }
+    }
+
+    public class SmsQueueOptions
+    {
+        public DateTime? scheduleAt;
+        public SmsQueueBillingOptions billing;
+
+        public SmsQueueOptions(DateTime? ScheduleAt, SmsQueueBillingOptions billingOptions)
+        {
+            scheduleAt = ScheduleAt;
+            billing = billingOptions;
+        }
+
+        public static SmsQueueOptions create(DateTime? scheduleAt, string invoiceTag)
+        {
+            SmsQueueBillingOptions billingOptions = null;
+            if (!String.IsNullOrWhiteSpace(invoiceTag))
+            {
+                billingOptions = new SmsQueueBillingOptions(invoiceTag);
+            }
+            return new SmsQueueOptions(scheduleAt, billingOptions);
+        }
+    }
+
+    public class SmsQueueBillingOptions
+    {
+        public string invoiceTag;
+
+        public SmsQueueBillingOptions(string invoiceTag)
+        {
+            this.invoiceTag = invoiceTag;
+        }
+    }
+
+    public class SmsRecipient
+    {
+        public string phoneNumber;
+        public List<Keyword> keywords;
+        public List<CustomDataElement> customData;
+
+        public SmsRecipient(string phoneNumber, List<Keyword> keywords, List<CustomDataElement> customData)
+        {
+            this.phoneNumber = phoneNumber;
+            this.customData = customData;
+            this.keywords = keywords;
+        }
+    }
 }

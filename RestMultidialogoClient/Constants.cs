@@ -22,6 +22,9 @@ namespace RestMultidialogoClient
         public const string SENDER_ZIP_CODE = "";
         public const string SENDER_VAT_CODE = "";
 
+        public const string SENDER_SMS_ALIAS_UUID = "";
+        public const string SENDER_PHONE_NUMBER_UUID = "";
+
         public const string MULTICERTA_ENABLED_ADDRESS = "";
 
         public const string X_API_CLIENT_NAME = "";

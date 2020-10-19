@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using RestMultidialogoClient.Domain;
 
 namespace RestMultidialogoClient.Dto
 {
@@ -600,6 +601,38 @@ namespace RestMultidialogoClient.Dto
         public static string CreatePostRequestDtoAsJson(string filename)
         {
             return JsonConvert.SerializeObject(CreatePostRequestDto(filename));
+        }
+    }
+
+    public class PostSmsQueueRequest
+    {
+        public SmsSender sender;
+        public String type = "sms-queue";
+        public String topic;
+        public String message;
+        public SmsQueueOptions options;
+        public List<CustomDataElement> customData = new List<CustomDataElement>();
+        public List<SmsRecipient> recipients = new List<SmsRecipient>();
+
+        public PostSmsQueueRequest(SmsSender sender,
+                                   String topic,
+                                   String message,
+                                   SmsQueueOptions options)
+        {
+            this.sender = sender;
+            this.topic = topic;
+            this.message = message;
+            this.options = options;
+        }
+    }
+
+    public class PostSmsQueueRequestDto
+    {
+        public DataPayload<PostSmsQueueRequest> data;
+
+        public PostSmsQueueRequestDto(PostSmsQueueRequest postSmsQueueRequest)
+        {
+            this.data = new DataPayload<PostSmsQueueRequest>(postSmsQueueRequest);
         }
     }
 }

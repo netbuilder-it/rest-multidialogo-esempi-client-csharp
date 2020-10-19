@@ -59,6 +59,9 @@ namespace RestMultidialogoClient
                     case 8:
                         Scenario_8().Wait();
                         break;
+                    case 9:
+                        Scenario_9().Wait();
+                        break;
                     default:
                         Console.WriteLine("Scelta errata");
                         break;
@@ -93,6 +96,7 @@ namespace RestMultidialogoClient
             Console.WriteLine(" 6 - Elenco utenti collegati");
             Console.WriteLine(" 7 - Invio Certificazione Unica 2020");
             Console.WriteLine(" 8 - Legge tipo di affrancatura impostata in preferenze");
+            Console.WriteLine(" 9 - Invio messaggio SMS a 2 destinatari");
             Console.WriteLine(" 0 - Fine");
             Console.WriteLine("Scegli lo scenario: ");
         }
@@ -363,6 +367,80 @@ namespace RestMultidialogoClient
             Console.WriteLine("Affrancatura impostata: " + userPreferences.GetSenderPostageType());
         }
 
+        private static async Task Scenario_9()
+        {
+            var account = Utils.GetAccount();
+
+            // sender
+            var sender = SmsSender.createWithPhoneNumber(
+                    Constants.SENDER_PHONE_NUMBER_UUID,
+                    Constants.SENDER_NOTIFICATION_ADDRESS
+            );
+
+            // options
+            SmsQueueOptions options = SmsQueueOptions.create(null, "Promemoria #1443");
+
+            // request
+            Dto.PostSmsQueueRequest request = new Dto.PostSmsQueueRequest(
+                    sender,
+                    "Promemoria",
+                    "Ciao {name}",
+                    options);
+
+            // add global custom data
+            request.customData.Add(new CustomDataElement("my-identifier", "xyz", "hidden"));
+
+            // recipients
+            request.recipients.Add(
+                    new Domain.SmsRecipient(
+                            "+393660000001",
+                            new List<Keyword>() { new Keyword("name", "Mario") },
+                            null
+                    )
+            );
+
+            request.recipients.Add(
+                    new Domain.SmsRecipient(
+                            "+393660000002",
+                            new List<Keyword>() {
+                                new Keyword("name", "Maria")
+                            },
+                            // add custom data to this particular recipient
+                            new List<CustomDataElement>() {
+                                 new CustomDataElement("recipient-id", "100", "hidden")
+                            }
+                    )
+            );
+
+            await sendPostSmsQueueRequest(account, new PostSmsQueueRequestDto(request));
+        }
+
+        private static async Task sendPostSmsQueueRequest(string account, PostSmsQueueRequestDto postQueueDto)
+        {
+            var url = Constants.REST_MULTIDIALOGO_STAGE_HOST + "/users/" + account + "/sms-queues";
+            var json = JsonConvert.SerializeObject(postQueueDto);
+
+            var response = await SendRequest(url, json, "Post");
+
+            if (response == null || response.Content == null)
+            {
+                throw new ApiDialogException("Impossibile creare la coda");
+            }
+
+            string responseBody = await response.Content.ReadAsStringAsync();
+
+            string status = Utils.GetResponseStatus(responseBody);
+            if (status.Equals("CREATED"))
+            {
+                Console.WriteLine("Coda creata");
+            }
+            else
+            {
+                Console.WriteLine("Si è verificato un errore! Dettagli:");
+                HandleErrors(responseBody, postQueueDto);
+            }
+        }
+
         private static async Task SendPostQueueRequest(string account, PostQueueDto postQueueDto)
         {
             string url = Constants.REST_MULTIDIALOGO_STAGE_HOST + "/users/" + account + "/queues";
@@ -392,9 +470,9 @@ namespace RestMultidialogoClient
         private static void HandleErrors(string response, Object postQueueDto)
         {
             Dto.ErrorResponse errorResponse = JsonConvert.DeserializeObject<ErrorResponse>(response);
-            
+
             Console.WriteLine(errorResponse.detail);
-            
+
             foreach (Parameter p in errorResponse.GetParameters())
             {
                 Console.WriteLine(p.code + " - " + p.parameter);
